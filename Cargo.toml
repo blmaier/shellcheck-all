@@ -1,5 +1,6 @@
 [package]
 name = "shellcheck-all"
+description = "Run Shellcheck on all the scripts!"
 license = "MIT"
 version = "0.1.0"
 edition = "2021"

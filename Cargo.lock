@@ -464,7 +464,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "shellcheck-par"
+name = "shellcheck-all"
 version = "0.1.0"
 dependencies = [
  "anyhow",

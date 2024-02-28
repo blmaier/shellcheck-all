@@ -1,5 +1,5 @@
 [package]
-name = "shellcheck-par"
+name = "shellcheck-all"
 license = "MIT"
 version = "0.1.0"
 edition = "2021"

@@ -54,6 +54,13 @@ impl Shellcheck {
         let mut command = self.create_command();
         command.arg("--version");
         let output = command.output().await?.stdout;
-        Ok(String::from_utf8(output)?)
+        for line in String::from_utf8(output)?.lines() {
+            if let Some((key, value)) = line.split_once(':') {
+                if key == "version" {
+                    return Ok(value.trim().into());
+                }
+            }
+        }
+        Err(anyhow::anyhow!("Failed to detect version number of Shellcheck"))
     }
 }

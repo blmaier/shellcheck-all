@@ -10,6 +10,7 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0.80"
 clap = { version = "4.5.1", features = ["derive"] }
+clio = { version = "0.3.5", features = ["clap", "clap-parse"] }
 file-format = { version = "0.24.0", features = ["reader-txt"] }
 ignore = { version = "0.4.22", features = ["simd-accel"] }
 num_cpus = "1.16.0"

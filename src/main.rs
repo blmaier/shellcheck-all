@@ -21,6 +21,9 @@ struct Args {
     #[arg(short='a', long, require_equals=true, value_delimiter=' ')]
     shellcheck_args: Option<Vec<String>>,
 
+    #[arg(long, short, default_value="-")]
+    output: clio::Output,
+
     /// Files or directories to check for shell files
     #[arg(default_value = "./")]
     files: Vec<PathBuf>,
@@ -79,8 +82,7 @@ async fn main() -> Result<()> {
     }
 
     let json = merge_shellcheck_json1(comments);
-
-    println!("{}", json);
+    serde_json::to_writer(args.output, &json)?;
 
     Ok(())
 }

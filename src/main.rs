@@ -20,15 +20,17 @@ struct Args {
     files: Vec<PathBuf>,
 }
 
-fn extract_comments(output: &[u8]) -> Option<Vec<serde_json::Value>> {
-    let mut json: serde_json::value::Value = serde_json::from_slice(output).unwrap();
-    match json.get_mut("comments") {
-        Some(comments) => match comments.take() {
-            serde_json::Value::Array(vec) => Some(vec),
-            _ => None,
-        },
-        None => None,
+fn merge_shellcheck_json1(outputs: Vec<Vec<u8>>) -> serde_json::Value {
+    let mut all_comments = Vec::new();
+    for output in outputs {
+        let mut json: serde_json::value::Value = serde_json::from_slice(&output).unwrap();
+        if let Some(comments) = json.get_mut("comments") {
+            if let serde_json::Value::Array(vec) = comments.take() {
+                all_comments.extend(vec);
+            }
+        }
     }
+    serde_json::json!({"comments": all_comments})
 }
 
 
@@ -55,16 +57,15 @@ async fn main() -> Result<()> {
         pool_builder.command(command);
     }
 
-    let mut comments: Vec<serde_json::Value> = Vec::new();
+    let mut comments = Vec::new();
 
     let mut pool = pool_builder.build(num_threads);
     while let Some(output) = pool.next().await {
-        if let Some(next) = extract_comments(&output?.stdout) {
-            comments.extend(next);
-        }
+        comments.push(output?.stdout);
     }
 
-    let json = serde_json::json!({"comments": comments});
+    let json = merge_shellcheck_json1(comments);
+
     println!("{}", json);
 
     Ok(())

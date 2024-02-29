@@ -40,7 +40,7 @@ fn merge_shellcheck_json1(outputs: Vec<Vec<u8>>) -> serde_json::Value {
 }
 
 
-#[tokio::main]
+#[tokio::main(flavor = "current_thread")]
 async fn main() -> Result<()> {
     let args = Args::parse();
     let num_threads = num_cpus::get() + 1;

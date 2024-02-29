@@ -13,9 +13,15 @@ use crate::walk_scripts::WalkShellScript;
 
 #[derive(Parser, Debug)]
 struct Args {
-    #[arg(long, default_value = "shellcheck")]
+    /// Path to Shellcheck binary
+    #[arg(short='s', long, default_value = "shellcheck")]
     shellcheck: PathBuf,
 
+    /// List of arguments for Shellcheck, whitespace seperated
+    #[arg(short='a', long, require_equals=true, value_delimiter=' ')]
+    shellcheck_args: Option<Vec<String>>,
+
+    /// Files or directories to check for shell files
     #[arg(default_value = "./")]
     files: Vec<PathBuf>,
 }
@@ -39,13 +45,21 @@ async fn main() -> Result<()> {
     let args = Args::parse();
     let num_threads = num_cpus::get() + 1;
 
-    let shellcheck = Shellcheck::new(args.shellcheck.into_os_string());
+    // Check we have a valid Shellcheck
+    let mut shellcheck = Shellcheck::new(args.shellcheck.into_os_string());
     shellcheck.get_version().await?;
 
+    // Build Shellcheck arguments
+    if let Some(ref sargs) = args.shellcheck_args {
+        shellcheck.add_args(sargs.iter().map(|s| s.to_string().into()));
+    }
+
+    // Find shell scripts to check
     let files: Result<Vec<ignore::DirEntry>, ignore::Error> = WalkShellScript::from_iter(args.files).into_iter().collect();
     let files = files?;
     let files_per_process = (files.len() / (num_threads * 16)) + 1;
 
+    // Split list of files into seperate Shellcheck commands
     let mut pool_builder = CommandPoolBuilder::new();
     for files_chunk in files.chunks(files_per_process) {
         let command = shellcheck
@@ -57,8 +71,8 @@ async fn main() -> Result<()> {
         pool_builder.command(command);
     }
 
+    // Run Shellcheck commands and collect output
     let mut comments = Vec::new();
-
     let mut pool = pool_builder.build(num_threads);
     while let Some(output) = pool.next().await {
         comments.push(output?.stdout);

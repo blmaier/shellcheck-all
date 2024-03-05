@@ -1,6 +1,9 @@
 use std::ffi::OsString;
 use std::process::Stdio;
 use tokio::process::Command;
+use which::which;
+use std::path::PathBuf;
+use std::ffi::OsStr;
 
 #[derive(Clone, Debug)]
 pub enum ShellcheckFormats {
@@ -9,18 +12,19 @@ pub enum ShellcheckFormats {
 
 #[derive(Clone, Debug)]
 pub struct Shellcheck {
-    program: OsString,
+    program: PathBuf,
     args: Vec<OsString>,
     format: ShellcheckFormats,
 }
 
 impl Shellcheck {
-    pub fn new(program: OsString) -> Self {
-        Self {
+    pub fn new<T: AsRef<OsStr>>(binary_name: T) -> anyhow::Result<Self> {
+        let program = which(binary_name)?;
+        Ok(Self {
             program,
             args: Vec::new(),
             format: ShellcheckFormats::JSON1,
-        }
+        })
     }
 
     pub fn add_args<T>(&mut self, args: T) -> &Self

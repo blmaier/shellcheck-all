@@ -49,7 +49,7 @@ async fn main() -> Result<()> {
     let num_threads = num_cpus::get() + 1;
 
     // Check we have a valid Shellcheck
-    let mut shellcheck = Shellcheck::new(args.shellcheck.into_os_string());
+    let mut shellcheck = Shellcheck::new(args.shellcheck)?;
     shellcheck.get_version().await?;
 
     // Build Shellcheck arguments

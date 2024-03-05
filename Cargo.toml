@@ -16,3 +16,4 @@ ignore = { version = "0.4.22", features = ["simd-accel"] }
 num_cpus = "1.16.0"
 serde_json = "1.0.114"
 tokio = { version = "1.36.0", features = ["macros", "rt", "process"] }
+which = "6.0.0"

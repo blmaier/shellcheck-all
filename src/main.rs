@@ -3,7 +3,7 @@ use clap::Parser;
 use std::path::PathBuf;
 
 mod command_pool;
-use crate::command_pool::CommandPoolBuilder;
+use crate::command_pool::CommandPool;
 
 mod shellcheck;
 use crate::shellcheck::Shellcheck;
@@ -42,7 +42,6 @@ fn merge_shellcheck_json1(outputs: Vec<Vec<u8>>) -> serde_json::Value {
     serde_json::json!({"comments": all_comments})
 }
 
-
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> Result<()> {
     let args = Args::parse();
@@ -63,7 +62,7 @@ async fn main() -> Result<()> {
     let files_per_process = (files.len() / (num_threads * 16)) + 1;
 
     // Split list of files into seperate Shellcheck commands
-    let mut pool_builder = CommandPoolBuilder::new();
+    let mut pool = CommandPool::new(num_threads);
     for files_chunk in files.chunks(files_per_process) {
         let command = shellcheck
             .check_files(
@@ -71,12 +70,11 @@ async fn main() -> Result<()> {
                     |x| x.path().into()
                 )
             );
-        pool_builder.command(command);
+        pool.spawn(command);
     }
 
     // Run Shellcheck commands and collect output
     let mut comments = Vec::new();
-    let mut pool = pool_builder.build(num_threads);
     while let Some(output) = pool.next().await {
         comments.push(output?.stdout);
     }

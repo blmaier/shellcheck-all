@@ -1,0 +1,3 @@
+[submodule "wild-corpus"]
+	path = wild-corpus
+	url = https://github.com/oilshell/wild-corpus.git

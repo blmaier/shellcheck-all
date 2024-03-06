@@ -36,3 +36,13 @@ fn compare_file(path: &str) {
 fn one_file() {
     compare_file("boringssl/crypto/lhash/make_macros.sh");
 }
+
+#[test]
+fn find_by_shebang() {
+    compare_file("pixelb-scripts/scripts/errno");
+}
+
+#[test]
+fn find_by_extension() {
+    compare_file("shell/shflags/shflags_issue_28_test.sh");
+}

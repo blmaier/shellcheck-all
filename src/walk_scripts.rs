@@ -78,14 +78,24 @@ fn entry_is_file(entry: &ignore::DirEntry) -> bool {
 
 fn entry_is_shellscript(entry: &ignore::DirEntry) -> bool {
     if entry_is_file(entry) {
-        match file_format::FileFormat::from_file(entry.path()) {
-            Ok(fmt) => match fmt {
-                file_format::FileFormat::ShellScript => true,
-                _ => false,
+        match entry.path().extension() {
+            Some(ext) => match ext.to_str() {
+                Some("sh") | Some("bash") | Some("zsh") | Some("bats") => true,
+                Some(_) | None => entry_shellcript_format(entry),
             },
-            Err(err) => panic!("File Format Error: {}", err),
+            None => entry_shellcript_format(entry),
         }
     } else {
         false
+    }
+}
+
+fn entry_shellcript_format(entry: &ignore::DirEntry) -> bool {
+    match file_format::FileFormat::from_file(entry.path()) {
+        Ok(fmt) => match fmt {
+            file_format::FileFormat::ShellScript => true,
+            _ => false,
+        },
+        Err(err) => panic!("File Format Error: {}", err),
     }
 }

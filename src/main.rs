@@ -1,6 +1,7 @@
 use anyhow::Result;
 use clap::Parser;
 use std::path::PathBuf;
+use shellcheck_all::format::ShellcheckJson1;
 
 mod command_pool;
 use crate::command_pool::CommandPool;
@@ -27,19 +28,6 @@ struct Args {
     /// Files or directories to check for shell files
     #[arg(default_value = "./")]
     files: Vec<PathBuf>,
-}
-
-fn merge_shellcheck_json1(outputs: Vec<Vec<u8>>) -> serde_json::Value {
-    let mut all_comments = Vec::new();
-    for output in outputs {
-        let mut json: serde_json::value::Value = serde_json::from_slice(&output).unwrap();
-        if let Some(comments) = json.get_mut("comments") {
-            if let serde_json::Value::Array(vec) = comments.take() {
-                all_comments.extend(vec);
-            }
-        }
-    }
-    serde_json::json!({"comments": all_comments})
 }
 
 #[tokio::main(flavor = "current_thread")]
@@ -74,13 +62,12 @@ async fn main() -> Result<()> {
     }
 
     // Run Shellcheck commands and collect output
-    let mut comments = Vec::new();
+    let mut comments = ShellcheckJson1::new();
     while let Some(output) = pool.next().await {
-        comments.push(output?.stdout);
+        comments.push(serde_json::from_slice(&output?.stdout)?);
     }
 
-    let json = merge_shellcheck_json1(comments);
-    serde_json::to_writer(args.output, &json)?;
+    serde_json::to_writer(args.output, &comments)?;
 
     Ok(())
 }

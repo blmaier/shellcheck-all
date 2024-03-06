@@ -4,14 +4,14 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 #[derive(PartialEq, Eq, Debug, Deserialize, Serialize)]
-#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
 enum ShellcheckJson1InsertionPoint {
     AfterEnd,
     BeforeStart,
 }
 
 #[derive(PartialEq, Eq, Debug, Deserialize, Serialize)]
-#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
 struct ShellcheckJson1Replacement {
     line: u32,
     end_line: u32,
@@ -23,12 +23,13 @@ struct ShellcheckJson1Replacement {
 }
 
 #[derive(PartialEq, Eq, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
 struct ShellcheckJson1Fix {
     replacements: Vec<ShellcheckJson1Replacement>,
 }
 
 #[derive(PartialEq, Eq, Debug, Deserialize, Serialize)]
-#[serde(rename_all = "lowercase")]
+#[serde(deny_unknown_fields, rename_all = "lowercase")]
 enum ShellcheckJson1Level {
     Info,
     Warning,
@@ -37,7 +38,7 @@ enum ShellcheckJson1Level {
 }
 
 #[derive(PartialEq, Eq, Debug, Deserialize, Serialize)]
-#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
 struct ShellcheckJson1Comment {
     file: String,
     line: u32,
@@ -51,6 +52,7 @@ struct ShellcheckJson1Comment {
 }
 
 #[derive(PartialEq, Eq, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
 struct ShellcheckJson1 {
     comments: Vec<ShellcheckJson1Comment>,
 }

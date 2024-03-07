@@ -15,7 +15,7 @@ use crate::walk_scripts::WalkShellScript;
 #[derive(Parser, Debug)]
 struct Args {
     /// Path to Shellcheck binary
-    #[arg(short='s', long, default_value = "shellcheck")]
+    #[arg(long, default_value = "shellcheck")]
     shellcheck: PathBuf,
 
     #[command(flatten)]

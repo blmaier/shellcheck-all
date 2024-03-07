@@ -26,9 +26,25 @@ pub struct Shellcheck {
 
 #[derive(Parser, Clone, Debug)]
 pub struct ShellcheckArgs {
+    /// Include warnings from sourced files (Shellcheck)
+    #[arg(short='a', long="check-sourced")]
+    check_sourced: bool,
+
     /// Output format (Shellcheck)
     #[arg(short='f', long, default_value_t = ShellcheckFormat::Json1)]
     format: ShellcheckFormat,
+
+    /// Don't look for .shellcheckrc files (Shellcheck)
+    #[arg(long)]
+    norc: bool,
+
+    /// Specify dialect (Shellcheck)
+    #[arg(short='s', long)]
+    shell: Option<String>,
+
+    /// Allow 'source' outside of FILES (Shellcheck)
+    #[arg(short='x', long="external-sources")]
+    external_sources: bool,
 }
 
 impl Shellcheck {
@@ -51,7 +67,19 @@ impl Shellcheck {
         T: IntoIterator<Item = OsString>,
     {
         let mut command = self.create_command();
+        if self.args.check_sourced {
+            command.arg("--check-sourced");
+        }
         command.arg("--format").arg(self.args.format.to_string());
+        if self.args.norc {
+            command.arg("--norc");
+        }
+        if let Some(shell) = &self.args.shell {
+            command.arg("--shell").arg(shell);
+        }
+        if self.args.external_sources {
+            command.arg("--external-sources");
+        }
         command.arg("--").args(files);
         command
     }

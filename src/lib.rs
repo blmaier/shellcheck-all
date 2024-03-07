@@ -1,14 +1,15 @@
 pub mod format {
     use serde::{Deserialize, Serialize};
+    use std::collections::BTreeSet;
 
-    #[derive(PartialEq, Eq, Debug, Deserialize, Serialize)]
+    #[derive(PartialEq, Eq, PartialOrd, Ord, Debug, Deserialize, Serialize)]
     #[serde(deny_unknown_fields, rename_all = "camelCase")]
     enum ShellcheckJson1InsertionPoint {
         AfterEnd,
         BeforeStart,
     }
 
-    #[derive(PartialEq, Eq, Debug, Deserialize, Serialize)]
+    #[derive(PartialEq, Eq, PartialOrd, Ord, Debug, Deserialize, Serialize)]
     #[serde(deny_unknown_fields, rename_all = "camelCase")]
     struct ShellcheckJson1Replacement {
         line: u32,
@@ -20,39 +21,39 @@ pub mod format {
         replacement: String,
     }
 
-    #[derive(PartialEq, Eq, Debug, Deserialize, Serialize)]
+    #[derive(PartialEq, Eq, PartialOrd, Ord, Debug, Deserialize, Serialize)]
     #[serde(deny_unknown_fields)]
     struct ShellcheckJson1Fix {
         replacements: Vec<ShellcheckJson1Replacement>,
     }
 
-    #[derive(PartialEq, Eq, Debug, Deserialize, Serialize)]
+    #[derive(PartialEq, Eq, PartialOrd, Ord, Debug, Deserialize, Serialize)]
     #[serde(deny_unknown_fields, rename_all = "lowercase")]
     enum ShellcheckJson1Level {
-        Info,
-        Warning,
         Error,
+        Warning,
+        Info,
         Style,
     }
 
-    #[derive(PartialEq, Eq, Debug, Deserialize, Serialize)]
+    #[derive(PartialEq, Eq, PartialOrd, Ord, Debug, Deserialize, Serialize)]
     #[serde(deny_unknown_fields, rename_all = "camelCase")]
     struct ShellcheckJson1Comment {
         file: String,
         line: u32,
-        end_line: u32,
         column: u32,
-        end_column: u32,
-        level: ShellcheckJson1Level,
         code: u32,
+        level: ShellcheckJson1Level,
         message: String,
+        end_line: u32,
+        end_column: u32,
         fix: Option<ShellcheckJson1Fix>,
     }
 
-    #[derive(PartialEq, Eq, Debug, Deserialize, Serialize)]
+    #[derive(PartialEq, Eq, Debug, Default, Deserialize, Serialize)]
     #[serde(deny_unknown_fields)]
     pub struct ShellcheckJson1 {
-        comments: Vec<ShellcheckJson1Comment>,
+        comments: BTreeSet<ShellcheckJson1Comment>,
     }
 
     impl ShellcheckJson1 {

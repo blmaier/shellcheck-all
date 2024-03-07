@@ -57,12 +57,6 @@ pub mod format {
     }
 
     impl ShellcheckJson1 {
-        pub fn new() -> Self {
-            Self {
-                comments: Vec::new(),
-            }
-        }
-
         pub fn push(&mut self, value: Self) {
             self.comments.extend(value.comments);
         }

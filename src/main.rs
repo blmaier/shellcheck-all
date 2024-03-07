@@ -52,19 +52,33 @@ async fn main() -> Result<()> {
     // Split list of files into seperate Shellcheck commands
     let mut pool = CommandPool::new(num_threads);
     for files_chunk in files.chunks(files_per_process) {
-        let command = shellcheck
-            .check_files(
-                files_chunk.iter().map(
-                    |x| x.path().into()
-                )
-            );
-        pool.spawn(command);
+        let files: Vec<std::ffi::OsString> = files_chunk.iter().map(|x| x.path().into()).collect();
+        let command = shellcheck.check_files(files.clone());
+        pool.spawn(command, files);
     }
 
     // Run Shellcheck commands and collect output
-    let mut comments = ShellcheckJson1::new();
-    while let Some(output) = pool.next().await {
-        comments.push(serde_json::from_slice(&output?.stdout)?);
+    let mut comments = ShellcheckJson1::default();
+    while let Some((files, output)) = pool.next().await {
+        //println!("files: {:#?}", files);
+        let output = output.expect("Internal command error running Shellcheck");
+        if !output.stderr.is_empty() {
+            if files.len() > 1 {
+                // Other files in this run may be valid
+                // Run Shellcheck on each file individually
+                for file in files {
+                    let filev = vec!(file);
+                    let command = shellcheck.check_files(filev.clone());
+                    pool.spawn(command, filev);
+                }
+            } else {
+                let stderr = std::str::from_utf8(&output.stderr)?;
+                eprintln!("Shellcheck error on {}", files[0].to_str().unwrap());
+                eprintln!("{}", stderr);
+            }
+        } else {
+            comments.push(serde_json::from_slice(&output.stdout)?);
+        }
     }
 
     serde_json::to_writer(args.output, &comments)?;

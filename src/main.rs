@@ -7,7 +7,7 @@ mod command_pool;
 use crate::command_pool::CommandPool;
 
 mod shellcheck;
-use crate::shellcheck::{Shellcheck, ShellcheckFormat};
+use crate::shellcheck::{Shellcheck, ShellcheckArgs};
 
 mod walk_scripts;
 use crate::walk_scripts::WalkShellScript;
@@ -18,9 +18,8 @@ struct Args {
     #[arg(short='s', long, default_value = "shellcheck")]
     shellcheck: PathBuf,
 
-    /// List of arguments for Shellcheck, whitespace seperated
-    #[arg(short='a', long, require_equals=true, value_delimiter=' ')]
-    shellcheck_args: Option<Vec<String>>,
+    #[command(flatten)]
+    shellcheck_args: ShellcheckArgs,
 
     #[arg(long, short, default_value="-")]
     output: clio::Output,
@@ -28,31 +27,17 @@ struct Args {
     /// Files or directories to check for shell files
     #[arg(default_value = "./")]
     files: Vec<PathBuf>,
-
-    /// Output format (Shellcheck)
-    #[arg(short='f', long, default_value_t = ShellcheckFormat::JSON1)]
-    format: ShellcheckFormat,
 }
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> Result<()> {
     let args = Args::parse();
 
-    match args.format {
-        ShellcheckFormat::JSON1 => (),
-        x => panic!("Shellcheck format '{}' not supported", x),
-    }
-
     let num_threads = num_cpus::get() + 1;
 
     // Check we have a valid Shellcheck
-    let mut shellcheck = Shellcheck::new(args.shellcheck, args.format)?;
+    let shellcheck = Shellcheck::new(args.shellcheck, args.shellcheck_args)?;
     shellcheck.get_version().await?;
-
-    // Build Shellcheck arguments
-    if let Some(ref sargs) = args.shellcheck_args {
-        shellcheck.add_args(sargs.iter().map(|s| s.to_string().into()));
-    }
 
     // Find shell scripts to check
     let files: Result<Vec<ignore::DirEntry>, ignore::Error> = WalkShellScript::from_iter(args.files).into_iter().collect();

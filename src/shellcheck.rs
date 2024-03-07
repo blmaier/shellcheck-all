@@ -1,4 +1,5 @@
 use std::ffi::OsString;
+use clap::Parser;
 use std::process::Stdio;
 use tokio::process::Command;
 use which::which;
@@ -7,14 +8,14 @@ use std::ffi::OsStr;
 
 #[derive(Clone, Debug, strum::Display, strum::EnumString, clap::ValueEnum)]
 #[strum(serialize_all = "lowercase")]
-pub enum ShellcheckFormat {
+enum ShellcheckFormat {
     Checkstyle,
     Diff,
-    GCC,
-    JSON,
-    JSON1,
+    Gcc,
+    Json,
+    Json1,
     Quiet,
-    TTY,
+    Tty,
 }
 
 #[derive(Clone, Debug)]
@@ -24,22 +25,27 @@ pub struct Shellcheck {
     format: ShellcheckFormat,
 }
 
+#[derive(Parser, Debug)]
+pub struct ShellcheckArgs {
+    /// Output format (Shellcheck)
+    #[arg(short='f', long, default_value_t = ShellcheckFormat::Json1)]
+    format: ShellcheckFormat,
+}
+
 impl Shellcheck {
-    pub fn new<T: AsRef<OsStr>>(binary_name: T, format: ShellcheckFormat) -> anyhow::Result<Self> {
+    pub fn new<T: AsRef<OsStr>>(binary_name: T, args: ShellcheckArgs) -> anyhow::Result<Self> {
         let program = which(binary_name)?;
+
+        match args.format {
+            ShellcheckFormat::Json1 => (),
+            x => panic!("Shellcheck format '{}' not supported", x),
+        };
+
         Ok(Self {
             program,
             args: Vec::new(),
-            format,
+            format: args.format,
         })
-    }
-
-    pub fn add_args<T>(&mut self, args: T) -> &Self
-    where
-        T: IntoIterator<Item = OsString>,
-    {
-        self.args.extend(args);
-        self
     }
 
     pub fn check_files<T>(&self, files: T) -> Command

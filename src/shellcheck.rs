@@ -5,25 +5,32 @@ use which::which;
 use std::path::PathBuf;
 use std::ffi::OsStr;
 
-#[derive(Clone, Debug)]
-pub enum ShellcheckFormats {
+#[derive(Clone, Debug, strum::Display, strum::EnumString, clap::ValueEnum)]
+#[strum(serialize_all = "lowercase")]
+pub enum ShellcheckFormat {
+    Checkstyle,
+    Diff,
+    GCC,
+    JSON,
     JSON1,
+    Quiet,
+    TTY,
 }
 
 #[derive(Clone, Debug)]
 pub struct Shellcheck {
     program: PathBuf,
     args: Vec<OsString>,
-    format: ShellcheckFormats,
+    format: ShellcheckFormat,
 }
 
 impl Shellcheck {
-    pub fn new<T: AsRef<OsStr>>(binary_name: T) -> anyhow::Result<Self> {
+    pub fn new<T: AsRef<OsStr>>(binary_name: T, format: ShellcheckFormat) -> anyhow::Result<Self> {
         let program = which(binary_name)?;
         Ok(Self {
             program,
             args: Vec::new(),
-            format: ShellcheckFormats::JSON1,
+            format,
         })
     }
 
@@ -41,9 +48,7 @@ impl Shellcheck {
     {
         let mut command = self.create_command();
         command.args(self.args.clone());
-        match self.format {
-            ShellcheckFormats::JSON1 => command.arg("--format=json1"),
-        };
+        command.arg("--format").arg(self.format.to_string());
         command.arg("--").args(files);
         command
     }

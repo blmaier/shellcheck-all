@@ -21,11 +21,10 @@ enum ShellcheckFormat {
 #[derive(Clone, Debug)]
 pub struct Shellcheck {
     program: PathBuf,
-    args: Vec<OsString>,
-    format: ShellcheckFormat,
+    args: ShellcheckArgs,
 }
 
-#[derive(Parser, Debug)]
+#[derive(Parser, Clone, Debug)]
 pub struct ShellcheckArgs {
     /// Output format (Shellcheck)
     #[arg(short='f', long, default_value_t = ShellcheckFormat::Json1)]
@@ -43,8 +42,7 @@ impl Shellcheck {
 
         Ok(Self {
             program,
-            args: Vec::new(),
-            format: args.format,
+            args,
         })
     }
 
@@ -53,8 +51,7 @@ impl Shellcheck {
         T: IntoIterator<Item = OsString>,
     {
         let mut command = self.create_command();
-        command.args(self.args.clone());
-        command.arg("--format").arg(self.format.to_string());
+        command.arg("--format").arg(self.args.format.to_string());
         command.arg("--").args(files);
         command
     }

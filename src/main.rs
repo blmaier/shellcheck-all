@@ -60,7 +60,6 @@ async fn main() -> Result<()> {
     // Run Shellcheck commands and collect output
     let mut comments = ShellcheckJson1::default();
     while let Some((files, output)) = pool.next().await {
-        //println!("files: {:#?}", files);
         let output = output.expect("Internal command error running Shellcheck");
         if !output.stderr.is_empty() {
             if files.len() > 1 {

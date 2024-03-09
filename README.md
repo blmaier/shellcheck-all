@@ -20,11 +20,11 @@ To Shellcheck a repo, run the following.
 
 > shellcheck-all --format=json1 ./
 
-Currently Shellcheck-all only supports the Shellcheck JSON1 format.
+Currently Shellcheck-all only supports the Shellcheck JSON and JSON1 formats.
 
 # TODO
 - Add --version that reports version of Shellcheck and Shellcheck-all
 - Add support for the rest of Shellcheck flags
-- Support other formats then Json1
+- Support other formats then Json1 and json
 - Add github builds
 - Publish to Cargo

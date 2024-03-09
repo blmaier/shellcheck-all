@@ -5,6 +5,9 @@ use tokio::process::Command;
 use which::which;
 use std::path::PathBuf;
 use std::ffi::OsStr;
+use shellcheck_all::format::ShellcheckFormatter;
+use shellcheck_all::format::ShellcheckJson1;
+use shellcheck_all::format::ShellcheckJson;
 
 #[derive(Clone, Debug, strum::Display, strum::EnumString, clap::ValueEnum)]
 #[strum(serialize_all = "lowercase")]
@@ -52,6 +55,7 @@ impl Shellcheck {
         let program = which(binary_name)?;
 
         match args.format {
+            ShellcheckFormat::Json => (),
             ShellcheckFormat::Json1 => (),
             x => panic!("Shellcheck format '{}' not supported", x),
         };
@@ -60,6 +64,14 @@ impl Shellcheck {
             program,
             args,
         })
+    }
+
+    pub fn formatter(&self) -> ShellcheckFormatter {
+        match &self.args.format {
+            ShellcheckFormat::Json => ShellcheckFormatter::Json(ShellcheckJson::default()),
+            ShellcheckFormat::Json1 => ShellcheckFormatter::Json1(ShellcheckJson1::default()),
+            x => panic!("Shellcheck format '{}' not supported", x),
+        }
     }
 
     pub fn check_files<T>(&self, files: T) -> Command

@@ -1,7 +1,6 @@
 use anyhow::Result;
 use clap::Parser;
 use std::path::PathBuf;
-use shellcheck_all::format::ShellcheckJson1;
 
 mod command_pool;
 use crate::command_pool::CommandPool;
@@ -53,7 +52,7 @@ async fn main() -> Result<()> {
     }
 
     // Run Shellcheck commands and collect output
-    let mut comments = ShellcheckJson1::default();
+    let mut comments = shellcheck.formatter();
     while let Some((files, output)) = pool.next().await {
         let output = output.expect("Internal command error running Shellcheck");
         if !output.stderr.is_empty() {
@@ -71,11 +70,11 @@ async fn main() -> Result<()> {
                 eprintln!("{}", stderr);
             }
         } else {
-            comments.push(serde_json::from_slice(&output.stdout)?);
+            comments.push_slice(&output.stdout)?;
         }
     }
 
-    serde_json::to_writer(args.output, &comments)?;
+    comments.to_writer(args.output)?;
 
     Ok(())
 }

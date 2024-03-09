@@ -4,32 +4,32 @@ pub mod format {
 
     #[derive(PartialEq, Eq, PartialOrd, Ord, Debug, Deserialize, Serialize)]
     #[serde(deny_unknown_fields, rename_all = "camelCase")]
-    enum ShellcheckJson1InsertionPoint {
+    enum ShellcheckJsonInsertionPoint {
         AfterEnd,
         BeforeStart,
     }
 
     #[derive(PartialEq, Eq, PartialOrd, Ord, Debug, Deserialize, Serialize)]
     #[serde(deny_unknown_fields, rename_all = "camelCase")]
-    struct ShellcheckJson1Replacement {
+    struct ShellcheckJsonReplacement {
         line: u32,
         end_line: u32,
         column: u32,
         end_column: u32,
-        insertion_point: ShellcheckJson1InsertionPoint,
+        insertion_point: ShellcheckJsonInsertionPoint,
         precedence: u32,
         replacement: String,
     }
 
     #[derive(PartialEq, Eq, PartialOrd, Ord, Debug, Deserialize, Serialize)]
     #[serde(deny_unknown_fields)]
-    struct ShellcheckJson1Fix {
-        replacements: Vec<ShellcheckJson1Replacement>,
+    struct ShellcheckJsonFix {
+        replacements: Vec<ShellcheckJsonReplacement>,
     }
 
     #[derive(PartialEq, Eq, PartialOrd, Ord, Debug, Deserialize, Serialize)]
     #[serde(deny_unknown_fields, rename_all = "lowercase")]
-    enum ShellcheckJson1Level {
+    enum ShellcheckJsonLevel {
         Error,
         Warning,
         Info,
@@ -38,27 +38,60 @@ pub mod format {
 
     #[derive(PartialEq, Eq, PartialOrd, Ord, Debug, Deserialize, Serialize)]
     #[serde(deny_unknown_fields, rename_all = "camelCase")]
-    struct ShellcheckJson1Comment {
+    struct ShellcheckJsonComment {
         file: String,
         line: u32,
         column: u32,
         code: u32,
-        level: ShellcheckJson1Level,
+        level: ShellcheckJsonLevel,
         message: String,
         end_line: u32,
         end_column: u32,
-        fix: Option<ShellcheckJson1Fix>,
+        fix: Option<ShellcheckJsonFix>,
     }
 
     #[derive(PartialEq, Eq, Debug, Default, Deserialize, Serialize)]
     #[serde(deny_unknown_fields)]
     pub struct ShellcheckJson1 {
-        comments: BTreeSet<ShellcheckJson1Comment>,
+        comments: BTreeSet<ShellcheckJsonComment>,
     }
 
-    impl ShellcheckJson1 {
-        pub fn push(&mut self, value: Self) {
-            self.comments.extend(value.comments);
+    #[derive(PartialEq, Eq, Debug, Default, Deserialize, Serialize)]
+    #[serde(deny_unknown_fields)]
+    #[serde(transparent)]
+    pub struct ShellcheckJson {
+        comments: BTreeSet<ShellcheckJsonComment>,
+    }
+
+    pub enum ShellcheckFormatter {
+        Json(ShellcheckJson),
+        Json1(ShellcheckJson1),
+    }
+
+    impl ShellcheckFormatter {
+        pub fn push_slice(&mut self, value: &[u8]) -> anyhow::Result<()> {
+            match self {
+                Self::Json1(x) => {
+                    let y: ShellcheckJson1 = serde_json::from_slice(value)?;
+                    x.comments.extend(y.comments);
+                }
+                Self::Json(x) => {
+                    let y: ShellcheckJson = serde_json::from_slice(value)?;
+                    x.comments.extend(y.comments);
+                }
+            };
+            Ok(())
+        }
+
+        pub fn to_writer<W>(&self, writer: W) -> anyhow::Result<()>
+        where
+            W: std::io::Write,
+        {
+            match self {
+                Self::Json1(x) => serde_json::to_writer(writer, &x)?,
+                Self::Json(x) => serde_json::to_writer(writer, &x)?,
+            };
+            Ok(())
         }
     }
 }

@@ -33,6 +33,10 @@ pub struct ShellcheckArgs {
     #[arg(short='a', long="check-sourced")]
     check_sourced: bool,
 
+    /// Perform dataflow analysis (Shellcheck)
+    #[arg(long)]
+    extended_analysis: Option<String>,
+
     /// Output format (Shellcheck)
     #[arg(short='f', long, default_value_t = ShellcheckFormat::Json1)]
     format: ShellcheckFormat,
@@ -40,6 +44,10 @@ pub struct ShellcheckArgs {
     /// Don't look for .shellcheckrc files (Shellcheck)
     #[arg(long)]
     norc: bool,
+
+    /// Prefer the specified configuration file over searching for one (Shellcheck)
+    #[arg(long)]
+    rcfile: Option<String>,
 
     /// Specify dialect (Shellcheck)
     #[arg(short='s', long)]
@@ -82,9 +90,15 @@ impl Shellcheck {
         if self.args.check_sourced {
             command.arg("--check-sourced");
         }
+        if let Some(extan) = &self.args.extended_analysis {
+            command.arg("--extended-analysis").arg(extan);
+        }
         command.arg("--format").arg(self.args.format.to_string());
         if self.args.norc {
             command.arg("--norc");
+        }
+        if let Some(rcfile) = &self.args.rcfile {
+            command.arg("--rcfile").arg(rcfile);
         }
         if let Some(shell) = &self.args.shell {
             command.arg("--shell").arg(shell);

@@ -8,6 +8,7 @@ use std::ffi::OsStr;
 use shellcheck_all::format::ShellcheckFormatter;
 use shellcheck_all::format::ShellcheckJson1;
 use shellcheck_all::format::ShellcheckJson;
+use shellcheck_all::format::ShellcheckGcc;
 
 #[derive(Clone, Debug, strum::Display, strum::EnumString, clap::ValueEnum)]
 #[strum(serialize_all = "lowercase")]
@@ -65,6 +66,7 @@ impl Shellcheck {
         match args.format {
             ShellcheckFormat::Json => (),
             ShellcheckFormat::Json1 => (),
+            ShellcheckFormat::Gcc => (),
             x => panic!("Shellcheck format '{}' not supported", x),
         };
 
@@ -78,6 +80,7 @@ impl Shellcheck {
         match &self.args.format {
             ShellcheckFormat::Json => ShellcheckFormatter::Json(ShellcheckJson::default()),
             ShellcheckFormat::Json1 => ShellcheckFormatter::Json1(ShellcheckJson1::default()),
+            ShellcheckFormat::Gcc => ShellcheckFormatter::Gcc(ShellcheckGcc::default()),
             x => panic!("Shellcheck format '{}' not supported", x),
         }
     }

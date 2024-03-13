@@ -46,6 +46,12 @@ fn one_file_json() {
     compare_file("boringssl/crypto/lhash/make_macros.sh", "json");
 }
 
+// TODO
+// #[test]
+// fn one_file_gcc() {
+//     compare_file("boringssl/crypto/lhash/make_macros.sh", "gcc");
+// }
+
 #[test]
 fn find_by_shebang() {
     compare_file("pixelb-scripts/scripts/errno", "json1");
